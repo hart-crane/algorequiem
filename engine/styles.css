@@ -1,0 +1,770 @@
+/* =============================================================
+   ALGOREQUIEM — engine stylesheet
+   Shared chrome CSS. Should not need to change when adding or
+   editing a movement's content (see movements/*.js).
+   ============================================================= */
+
+
+  :root{
+    --void: #0b0a08;
+    --paper-rgb: 232,225,208;
+    --paper-solid: #ece6d6;
+    --ink: #1d1a16;
+    --ink-dim: rgba(29,26,22,0.52);
+    --accent: #961e14;
+    --accent-dim: rgba(170,30,20,0.55);
+    --hair: rgba(29,26,22,0.16);
+    --hair-light: rgba(232,225,208,0.16);
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  *, *::before, *::after{ box-sizing: border-box; }
+  html{ height: 100%; }
+
+  body{
+    margin: 0;
+    min-height: 100%;
+    background: var(--void);
+    color: var(--ink);
+    font-family: var(--mono);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 1s ease;
+  }
+  body.reading{
+    background: var(--paper-solid);
+    overflow-y: auto;
+  }
+
+  .sr-only{
+    position:absolute; width:1px; height:1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0; padding:0;
+  }
+
+  /* =============================================
+     SHARED FIXED LAYERS
+     ============================================= */
+
+  .grain-layer{
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0;
+    mix-blend-mode: overlay;
+    transition: opacity 2.6s ease;
+    pointer-events: none;
+  }
+  body.bg-in .grain-layer{ opacity: 1; }
+  #grain{ width:100%; height:100%; display:block; image-rendering:pixelated; }
+
+  /* entering: fade out grain along with the panel */
+  body.entering .grain-layer{
+    opacity: 0 !important;
+    transition: opacity 0.9s ease;
+  }
+  /* reading: grain fades out — paper background needs no texture layer */
+  body.reading .grain-layer{
+    opacity: 0 !important;
+    transition: opacity 0.8s ease;
+  }
+
+  .vignette{
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 42%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.55) 100%);
+    transition: opacity 0.8s ease;
+  }
+  body.reading .vignette{ opacity: 0; }
+
+  /* =============================================
+     LANDING VIEW  (fixed, z-index 10, always on top until reading)
+     ============================================= */
+
+  #landing{
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6vh 1.25rem;
+  }
+  /* once reading mode is fully active, take landing out of tab order */
+  body.reading #landing{
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  /* ---------- panel glow wrapper ---------- */
+
+  .panel-glow{
+    position: relative;
+    z-index: 2;
+    width: clamp(320px, 88vw, 620px);
+    filter: drop-shadow(0 0 50px rgba(255,255,255,0.5)) drop-shadow(0 0 30px rgba(255,255,255,0.3));
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 1.6s ease 0.3s, transform 1.6s ease 0.3s;
+  }
+  body.bg-in .panel-glow{ opacity: 1; transform: translateY(0); }
+  body.entering .panel-glow{
+    opacity: 0 !important;
+    transition: opacity 0.9s ease;
+  }
+
+  /* ---------- panel ---------- */
+
+  .panel{
+    --bevel: clamp(14px, 2.6vw, 22px);
+    width: 100%;
+    padding: clamp(1.5rem, 4.4vw, 2.7rem) clamp(1.3rem, 4.4vw, 2.4rem);
+    background: rgba(var(--paper-rgb), 0.7);
+    border: 1px solid var(--hair);
+    clip-path: polygon(
+      var(--bevel) 0, 100% 0,
+      100% calc(100% - var(--bevel)), calc(100% - var(--bevel)) 100%,
+      0 100%, 0 var(--bevel)
+    );
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset;
+    backdrop-filter: blur(2px) saturate(0.85);
+    -webkit-backdrop-filter: blur(2px) saturate(0.85);
+  }
+
+  .listing{
+    font-size: clamp(12.5px, 2.6vw, 14.5px);
+    line-height: 1.65;
+    letter-spacing: 0.01em;
+  }
+
+  .line{ white-space: pre-wrap; min-height: 1.65em; }
+
+  .illum{
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.5em;
+    color: var(--accent);
+    line-height: 0.7;
+    display: inline-block;
+    transform: translateY(0.07em);
+    opacity: 0;
+    animation: illumIn 0.7s ease forwards;
+  }
+  .title-word{
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 600;
+  }
+  @keyframes illumIn{
+    from{ opacity:0; transform: translateY(0.07em) scale(0.7); }
+    to{   opacity:1; transform: translateY(0.07em) scale(1); }
+  }
+
+  .gap{ height: 0.85em; }
+
+  .caret{
+    color: var(--accent);
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity: 0; } }
+
+  /* ---------- contents ---------- */
+
+  .contents{ margin: 0.1em 0 0.2em; }
+
+  .row{
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    align-items: baseline;
+    column-gap: 0.85rem;
+    padding: 0.16rem 0;
+    opacity: 0;
+    transform: translateY(3px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .row.visible{ opacity: 1; transform: translateY(0); }
+
+  .num{ color: var(--ink-dim); font-size: 0.92em; }
+
+  .title-live{
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: color 0.25s ease, border-color 0.25s ease;
+    width: max-content;
+  }
+  .title-live:hover, .title-live:focus-visible{
+    color: var(--accent);
+    border-bottom-color: var(--accent-dim);
+    outline: none;
+  }
+  .title-live:focus-visible{
+    outline: 1px solid var(--accent-dim);
+    outline-offset: 3px;
+  }
+
+  .title-sealed{
+    color: var(--ink-dim);
+    user-select: none;
+    cursor: default;
+  }
+  .sealed-tag{
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.95em;
+    margin-left: 0.55em;
+    color: rgba(29,26,22,0.7);
+  }
+
+  /* ---------- command buttons ---------- */
+
+  .cmdline{
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 1.1em;
+    background: none;
+    border: none;
+    padding: 0.15rem 0;
+    font: inherit;
+    font-size: clamp(12.5px, 2.6vw, 14.5px);
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+  }
+  .cmdline:hover, .cmdline:focus-visible{ color: var(--accent); }
+  .cmdline:focus-visible{ outline: 1px solid var(--accent-dim); outline-offset: 4px; }
+  .cmdline .lineText::before{ content: '> '; opacity: 0.45; }
+  .cmdline[disabled]{ cursor: default; color: var(--ink-dim); }
+  .cmdline[disabled]:hover, .cmdline[disabled]:focus-visible{ color: var(--ink-dim); }
+
+  .ready-caret{ display: none; color: var(--accent); }
+  body.ready .ready-caret{ display: inline; animation: blink 1.1s steps(1) infinite; }
+
+  /* ---------- colophon ---------- */
+
+  .colophon{
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.45s ease, opacity 0.35s ease, margin-top 0.45s ease;
+    font-family: var(--serif);
+    font-size: 1rem;
+    line-height: 1.55;
+    color: rgba(29,26,22,0.7);
+    border-left: 1px solid var(--hair);
+    padding-left: 0.85rem;
+  }
+  .colophon.open{
+    max-height: 240px;
+    opacity: 1;
+    margin-top: 0.6rem;
+  }
+
+  /* =============================================
+     READING VIEW  (normal flow, beneath #landing)
+     ============================================= */
+
+  #reading{
+    position: relative;
+    min-height: 100vh;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+  body.reading #reading{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ---------- back button ---------- */
+
+  .back-btn{
+    position: fixed;
+    top: 1.4rem;
+    left: 1.5rem;
+    z-index: 20;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--ink-dim);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.5s ease, color 0.2s ease;
+  }
+  .back-btn::before{ content: '← '; }
+  body.reading .back-btn{ opacity: 0.7; }
+  .back-btn:hover{ color: var(--accent); opacity: 1; }
+  .back-btn:focus-visible{ outline: 1px solid var(--accent-dim); outline-offset: 4px; color: var(--accent); }
+
+  /* ---------- movement label ---------- */
+
+  /* ---------- poem section heading ---------- */
+
+  .poem-section-heading-wrap{
+    position: fixed;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+  body.reading .poem-section-heading-wrap{ opacity: 1; }
+
+  /* desktop: right column, aligned with first poem line */
+  @media (hover: hover) and (pointer: fine){
+    .poem-section-heading-wrap{
+      left: calc(50% + 19rem);
+      right: 1.5rem;
+      top: calc(50vh - 13rem); /* approximate vertical match with first poem line */
+    }
+    @media (max-width: 900px){
+      .poem-section-heading-wrap{ display: none; }
+    }
+  }
+
+  /* mobile: top-right header, same level as Incipit button */
+  @media (pointer: coarse) and (hover: none){
+    .back-btn{
+      line-height: 1;
+    }
+    .poem-section-heading-wrap{
+      top: 1.4rem;
+      right: 1.5rem;
+      left: auto;
+      height: 0.7rem;       /* match back-btn text height */
+      display: flex;
+      align-items: center;
+      overflow: visible;
+    }
+    .poem-section-heading{
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      margin: 0;
+      line-height: 1;
+    }
+  }
+
+  .poem-section-heading{
+    font-family: var(--mono);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--ink-dim);
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+  .lp-heading-accent{ color: var(--accent); }
+
+  /* ---------- call II_sileicon — desktop (right column) ---------- */
+
+  #call-line-desktop{
+    position: fixed;
+    left: calc(50% + 19rem);
+    right: 1.5rem;
+    top: calc(50vh + 12rem);
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.85;
+    color: var(--ink-dim);
+    white-space: pre;
+  }
+  #lp-8-desktop{ display: block; }
+  #call-line-desktop.call-visible{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  @media (max-width: 900px){   #call-line-desktop{ display: none; } }
+  @media (pointer: coarse) and (hover: none){ #call-line-desktop{ display: none; } }
+
+  .lp-calllink{
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  .lp-calllink:hover{
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: var(--accent-dim);
+    text-underline-offset: 0.4em;
+  }
+
+  /* ---------- call II_sileicon — mobile (exegesis sheet section) ---------- */
+
+  .sheet-call-section{
+    display: none;
+    margin-top: 0.85rem;
+  }
+  .sheet-call-section.call-active{ display: block; }
+  .sheet-call-line{
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    white-space: pre;
+    display: block;
+  }
+
+  /* ---------- background code text ---------- */
+
+  #bg-code{
+    position: fixed;
+    left: 1.5rem;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: -1;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-weight: 500;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 128px 128px;
+    white-space: pre;
+    line-height: 1.3;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+  body.reading #bg-code{ opacity: 0.06; }
+  #bg-code span{ display: block; }
+  @media (pointer: coarse) and (hover: none){
+    #bg-code{ left: -3rem; }
+  }
+
+  /* ---------- poem ---------- */
+
+  .poem-page{
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8vh 2rem;
+  }
+
+  /* ---------- scroll fade overlays ---------- */
+
+  .poem-fade-top,
+  .poem-fade-bottom{
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 27vh;
+    z-index: 19; /* below nav chrome (20) but above poem content */
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .poem-fade-top{
+    top: 0;
+    background: linear-gradient(to bottom, var(--paper-solid) 0%, transparent 100%);
+  }
+  .poem-fade-bottom{
+    bottom: 0;
+    background: linear-gradient(to top, var(--paper-solid) 0%, transparent 100%);
+  }
+  body.reading .poem-fade-top,
+  body.reading .poem-fade-bottom{ opacity: 1; }
+
+  .poem-wrap{
+    width: 100%;
+    max-width: 36rem;
+  }
+
+  .poem{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--serif);
+  }
+
+  .poem-line{
+    font-size: clamp(1rem, 2.4vw, 1.2rem);
+    line-height: 1.55;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    display: block;
+    min-height: 1.55em;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .poem-line.in{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .stream-caret{
+    display: inline-block;
+    width: 0.6ch;
+    height: 1.1em;
+    background: var(--accent);
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    animation: caretBlink 0.9s steps(1) infinite;
+    border-radius: 1px;
+  }
+  @keyframes caretBlink{ 50%{ opacity: 0; } }
+
+  /* ---------- annotated terms ---------- */
+
+  .term{
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: rgba(29,26,22,0.28);
+    text-underline-offset: 0.18em;
+    cursor: pointer;
+  }
+
+  /* hover interactions — desktop (precise pointer + hover capable) only */
+  @media (hover: hover) and (pointer: fine){
+    .term:hover{
+      text-decoration: none;
+    }
+    .term:hover::before{ content: '⸤'; color: var(--accent); }
+    .term:hover::after{  content: '⸥'; color: var(--accent); }
+    /* while a term is pinned, all other terms are visually inert */
+    body.term-pinned .term:not(.pinned){
+      pointer-events: none;
+    }
+  }
+
+  .term::before{ content: ''; }
+  .term::after{  content: ''; }
+  .term.pinned{
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .term.pinned::before{ content: '⸤'; color: var(--accent); }
+  .term.pinned::after{  content: '⸥'; color: var(--accent); }
+
+  /* ---------- exegesis panel ---------- */
+
+  .exegesis-panel{
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    left: calc(50% + 19rem);
+    right: 1.5rem;
+    max-width: 18rem;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  .exegesis-panel.visible{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .exegesis-text{
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+    margin: 0;
+  }
+  .exegesis-eyebrow{
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 0.55rem;
+  }
+
+  /* ---------- exegesis divider ---------- */
+
+  .exegesis-divider{
+    position: fixed;
+    left: calc(50% + 17.5rem);
+    top: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s ease 0.5s;
+  }
+  body.reading .exegesis-divider{ opacity: 1; }
+  .exegesis-divider::before,
+  .exegesis-divider::after{
+    content: '✤';
+    color: var(--accent);
+    font-size: 1.2rem;
+    opacity: 0.8;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .exegesis-divider::before{ margin-bottom: 0.6rem; }
+  .exegesis-divider::after{  margin-top: 0.6rem; }
+  .divider-line{
+    flex: 1;
+    width: 1.5px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  @media (max-width: 900px){
+    .exegesis-panel, .exegesis-divider{ display: none; }
+  }
+
+  /* ---------- mobile exegesis bottom sheet ---------- */
+
+  .exegesis-sheet{
+    display: none; /* shown only on touch devices via JS */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    background: var(--paper-solid);
+    padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 32px rgba(0,0,0,0.14);
+    transform: translateY(100%);
+    transition: transform 0.35s ease;
+    pointer-events: none;
+  }
+  .exegesis-sheet.open{
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .exegesis-sheet-close{
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 1.1rem;
+    transform: rotate(0deg);
+    transform-origin: center;
+    transition: transform 0.3s ease;
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 0.75rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .exegesis-sheet.open .exegesis-sheet-close{ transform: rotate(45deg); }
+  /* during close sequence: rotate back to 0° first, then slide */
+  .exegesis-sheet.open.closing .exegesis-sheet-close{ transform: rotate(0deg); }
+
+  @media (pointer: coarse) and (hover: none){
+    .exegesis-sheet{ display: block; }
+  }
+
+  /* =============================================
+     WAITLIST MODAL (shown from .globl _start while all movements are
+     sealed — see engine.js openWaitlistModal())
+     ============================================= */
+
+  .modal-backdrop{
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(11,10,8,0.72);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .modal-backdrop.visible{ opacity: 1; pointer-events: auto; }
+
+  .modal{
+    position: fixed; z-index: 41;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -46%);
+    width: min(420px, calc(100vw - 3rem));
+    background: rgba(var(--paper-rgb), 0.97);
+    --bevel: clamp(14px, 2.6vw, 20px);
+    clip-path: polygon(
+      var(--bevel) 0, 100% 0,
+      100% calc(100% - var(--bevel)), calc(100% - var(--bevel)) 100%,
+      0 100%, 0 var(--bevel)
+    );
+    padding: 2.75rem 2rem 2.25rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+  }
+  .modal.visible{
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+  }
+
+  .modal-close{
+    position: absolute; top: 0.6rem; right: 0.8rem;
+    background: none; border: none; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.1rem; line-height: 1;
+    color: var(--ink-dim);
+    padding: 0.5rem;
+    transform: rotate(45deg);
+    transform-origin: center;
+    transition: transform 0.3s ease;
+  }
+  .modal-close:hover, .modal-close:focus-visible{ color: var(--accent); }
+  .modal-close:focus-visible{ outline: 1px solid var(--accent-dim); outline-offset: 2px; }
+  /* during close sequence: rotate back to 0° before the modal fades out */
+  .modal.closing .modal-close{ transform: rotate(0deg); }
+
+  .modal-heading{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    margin: 0 0 1.75rem;
+    min-height: 1.4em;
+  }
+
+  .modal-social{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .social-link{
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.01em;
+    word-break: break-all;
+  }
+  .social-link:hover, .social-link:focus-visible{ text-decoration-color: var(--ink); }
+  .social-link:focus-visible{ outline: 1px solid var(--accent-dim); outline-offset: 3px; }
+
+  body.modal-open{ overflow: hidden; }
+
+  /* =============================================
+     REDUCED MOTION + RESPONSIVE
+     ============================================= */
+
+  @media (prefers-reduced-motion: reduce){
+    body, .panel-glow, .grain-layer, .vignette,
+    .row, .colophon, .back-btn,
+    .poem-line, #reading, .exegesis-panel, .exegesis-divider,
+    .poem-fade-top, .poem-fade-bottom,
+    .modal-backdrop, .modal{
+      transition: none !important;
+    }
+    .caret, .ready-caret, .stream-caret{ animation: none !important; opacity: 1; }
+    .poem-line{ opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 480px){
+    .row{ grid-template-columns: 2rem 1fr; }
+  }
+

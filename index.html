@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algorequiem</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="engine/styles.css">
+</head>
+<body>
+
+  <h1 class="sr-only">Algorequiem — a requiem in nine movements</h1>
+
+  <!-- shared fixed layers -->
+  <div class="grain-layer" aria-hidden="true"><canvas id="grain"></canvas></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- ==================== LANDING VIEW ==================== -->
+  <div id="landing">
+    <div class="panel-glow">
+      <div class="panel">
+        <div class="listing">
+
+          <div class="line" id="l-rule1"><span class="lineText"></span></div>
+          <div class="line" id="l-title"><span class="lineText"></span></div>
+          <div class="line" id="l-meta"><span class="lineText"></span></div>
+          <div class="line" id="l-rule2"><span class="lineText"></span></div>
+
+          <div class="gap"></div>
+
+          <div class="line" id="l-data"><span class="lineText"></span></div>
+
+          <!-- populated at load by engine/engine.js from window.ALGOREQUIEM_MOVEMENTS,
+               in the order the movements/*.js files are loaded below -->
+          <nav class="contents" id="contents" aria-label="Movements"></nav>
+
+          <div class="gap"></div>
+
+          <button class="cmdline" id="btnText" aria-expanded="false">
+            <span class="lineText"></span>
+          </button>
+          <div class="colophon" id="colophon">
+            A requiem for / in / of / by the age of AI. Whether it is the human or
+            the machine being eulogised, if indeed it is either, is left as
+            an exercise for the reader.
+          </div>
+
+          <!-- disabled state / aria-label are set by engine.js based on
+               whether any movement has status: 'live' -->
+          <button class="cmdline" id="btnStart" disabled>
+            <span class="lineText"></span><span class="ready-caret" aria-hidden="true">▌</span>
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== READING VIEW ==================== -->
+  <div id="reading" aria-hidden="true">
+
+    <button class="back-btn" id="btnBack">Incipit</button>
+
+    <aside class="exegesis-panel" id="exegesis" aria-live="polite" aria-atomic="true">
+      <span class="exegesis-eyebrow" id="exegesis-eyebrow"></span>
+      <p class="exegesis-text" id="exegesis-text"></p>
+    </aside>
+
+    <div class="exegesis-sheet" id="exegesis-sheet" aria-hidden="true" role="dialog" aria-modal="true">
+      <button class="exegesis-sheet-close" id="exegesis-sheet-close" aria-label="Close annotation">✤</button>
+      <span class="exegesis-eyebrow" id="sheet-eyebrow"></span>
+      <p class="exegesis-text" id="sheet-text"></p>
+      <div class="sheet-call-section" id="sheet-call-section">
+        <span class="sheet-call-line" id="lp-8-mobile"></span>
+      </div>
+    </div>
+
+    <div class="exegesis-divider" aria-hidden="true"><span class="divider-line"></span></div>
+
+    <!-- populated at load by engine/engine.js from the entered movement's
+         `pages` array (or its render() function, for custom-type movements) -->
+    <div id="poem-pages"></div>
+
+  </div>
+
+  <div class="poem-fade-top"    aria-hidden="true"></div>
+  <div class="poem-fade-bottom" aria-hidden="true"></div>
+
+  <div id="bg-code" aria-hidden="true"></div>
+
+  <div class="poem-section-heading-wrap">
+    <h2 class="poem-section-heading"></h2>
+  </div>
+
+  <div id="call-line-desktop" aria-hidden="true">
+    <span id="lp-8-desktop"></span>
+  </div>
+
+  <!-- ==================== WAITLIST MODAL ====================
+       Opened from #btnStart while no movement is live yet (see
+       openWaitlistModal() in engine/engine.js). No file needs to
+       change to retire this behaviour once Movement I goes live —
+       #btnStart automatically reverts to opening the reading view
+       the moment a movement's status flips to 'live'. -->
+  <div class="modal-backdrop" id="waitlistBackdrop" hidden></div>
+  <div class="modal" id="waitlistModal" role="dialog" aria-modal="true"
+       aria-labelledby="waitlistHeading" aria-hidden="true" hidden>
+    <button class="modal-close" id="waitlistClose" aria-label="Close">✤</button>
+    <h2 class="modal-heading" id="waitlistHeading">
+      <span class="lineText"></span><span class="stream-caret" aria-hidden="true"></span>
+    </h2>
+    <div class="modal-social">
+      <a class="social-link" href="https://www.instagram.com/algorequiem/" target="_blank" rel="noopener noreferrer">
+        <span class="social-url" data-final="instagram.com/algorequiem/">instagram.com/algorequiem/</span>
+      </a>
+      <a class="social-link" href="https://www.youtube.com/@algorequiem" target="_blank" rel="noopener noreferrer">
+        <span class="social-url" data-final="youtube.com/@algorequiem">youtube.com/@algorequiem</span>
+      </a>
+      <a class="social-link" href="https://www.tiktok.com/@algorequiem" target="_blank" rel="noopener noreferrer">
+        <span class="social-url" data-final="tiktok.com/@algorequiem">tiktok.com/@algorequiem</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ==================== MOVEMENTS ====================
+       Each file registers one movement object into
+       window.ALGOREQUIEM_MOVEMENTS. Order here = order shown in the
+       contents list. Add a new <script> line for each new movement. -->
+  <script src="movements/androit.js"></script>
+  <script src="movements/sileicon.js"></script>
+  <script src="movements/of-vectors.js"></script>
+  <script src="movements/synced-up.js"></script>
+  <script src="movements/pie-gpu.js"></script>
+  <script src="movements/agnus-data.js"></script>
+  <script src="movements/flops-aeterna.js"></script>
+  <script src="movements/lib-erase.js"></script>
+  <script src="movements/in-parameter.js"></script>
+
+  <!-- engine loads last — it reads whatever the movement files registered -->
+  <script src="engine/engine.js"></script>
+
+</body>
+</html>
